@@ -1,4 +1,4 @@
-Main characteristics of the dataset [Link](https://divvy-tripdata.s3.amazonaws.com/index.html):
+Main characteristics of the dataset: [(Link)](https://divvy-tripdata.s3.amazonaws.com/index.html)
 * 12 csv files.
 * Each file represents the trip data for a specific month.
 * Covers trip data for the year 2024

@@ -6,9 +6,10 @@ create table ride (
 	distance_meters float
 );
 
+truncate table ride;
+
 load data infile "cleaned_merged.csv"
 into table ride
 fields terminated by ','
 lines terminated by '\n'
 ignore 1 rows;
-
