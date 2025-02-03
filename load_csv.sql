@@ -8,7 +8,7 @@ create table ride (
 
 truncate table ride;
 
-load data infile "cleaned_merged.csv"
+load data infile "sampled_cleaned.csv"
 into table ride
 fields terminated by ','
 lines terminated by '\n'
