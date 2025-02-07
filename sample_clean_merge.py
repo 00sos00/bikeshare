@@ -19,27 +19,30 @@ for filename in tqdm(os.listdir(datadir), "Loading files"):
     if not filename.endswith(".csv"): continue
     dfs.append(pd.read_csv(datadir + "/" + filename))
 merged_df = pd.concat(dfs)
+
 merged_df["started_at"] = pd.to_datetime(merged_df["started_at"], format="ISO8601")
 merged_df["ended_at"] = pd.to_datetime(merged_df["ended_at"], format="ISO8601")
 merged_df["month"] = merged_df.apply(month, axis=1)
 merged_df["daytime"] = merged_df.apply(daytime, axis=1)
+
 print("Grouping...")
-groups = merged_df.groupby(["member_casual", "rideable_type", "month", "daytime"])
-print("Grouping done.")
 sample_size_perc = 0.1
 sampled_dfs = []
 merged_df_rows_num = merged_df.shape[0]
 total_target_rows_num = sample_size_perc * merged_df_rows_num
-for g, group_df in tqdm(groups, "Sampling"):
-    print("Sampling group:", g)
-    group_rows_num = group_df.shape[0]
-    original_group_perc = group_rows_num / merged_df_rows_num
-    new_group_rows_num = original_group_perc * total_target_rows_num
-    group_df.drop(columns=["month", "daytime"], inplace=True)
-    sampled_dfs.append(group_df.sample(n=int(round(new_group_rows_num))))
+user_groups = merged_df.groupby(["member_casual"])
+for _, ugroup in user_groups:
+	ugroup_rows_num = ugroup.shape[0]
+	groups = ugroup.groupby(["rideable_type", "month", "daytime"])
+	for g, group_df in tqdm(groups, "Sampling"):
+		group_rows_num = group_df.shape[0]
+		original_group_perc = group_rows_num / ugroup_rows_num
+		new_group_rows_num = original_group_perc * (total_target_rows_num / 2)
+		group_df.drop(columns=["month", "daytime"], inplace=True)
+		sampled_dfs.append(group_df.sample(n=int(round(new_group_rows_num))))
+print("Grouping done.")
 
 merged_df = pd.concat(sampled_dfs)
-print("Sampling done.")
 print()
 
 print("Cleaning...")
@@ -94,7 +97,7 @@ print("Removing trips below 60 seconds or above 70km")
 merged_df = merged_df[
     (merged_df["distance_meters"] > 0) &
     (merged_df["distance_meters"] <= 70000) &
-    ((merged_df["ended_at"] - merged_df["started_at"]).dt.seconds > 60)
+    ((merged_df["ended_at"] - merged_df["started_at"]).dt.total_seconds() > 60)
 ]
 
 merged_df.to_csv("sampled_cleaned.csv", index=False)
